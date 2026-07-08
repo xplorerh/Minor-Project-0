@@ -9,12 +9,3 @@ scipy==1.18.0
 
 
 
-
-heartbeat-rppg/
-├── config.py              # Global configuration parameters
-├── signal_processing.py   # Butterworth filter, detrend, FFT-based HR
-├── pos_algorithm.py       # POS rPPG algorithm (Wang et al. 2017)
-├── face_roi.py            # MediaPipe Face Mesh → forehead/cheek ROI mask
-├── heartrate_monitor.py   # Main loop: capture, process, display, plot
-├── main.py                # CLI entry point with argparse
-└── requirements.txt
