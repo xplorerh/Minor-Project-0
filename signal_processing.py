@@ -1,12 +1,21 @@
 import numpy as np
-from scipy import signal
-from scipy.signal import butter, filtfilt
+
+try:
+    from scipy import signal
+    from scipy.signal import butter, filtfilt
+except Exception:
+    signal = None
+    butter = None
+    filtfilt = None
 
 
 class SignalProcessor:
 
     @staticmethod
     def butter_bandpass(lowcut, highcut, fs, order=4):
+        if butter is None:
+            return None, None
+
         nyq = 0.5 * fs
         low = lowcut / nyq
         high = highcut / nyq
@@ -15,12 +24,33 @@ class SignalProcessor:
 
     @staticmethod
     def bandpass_filter(data, lowcut, highcut, fs, order=4):
-        b, a = SignalProcessor.butter_bandpass(lowcut, highcut, fs, order)
-        return filtfilt(b, a, data)
+        data = np.asarray(data, dtype=np.float64)
+
+        if filtfilt is not None:
+            b, a = SignalProcessor.butter_bandpass(lowcut, highcut, fs, order)
+            return filtfilt(b, a, data)
+
+        if data.size < 4:
+            return data
+
+        freqs = np.fft.rfftfreq(data.size, d=1 / fs)
+        spectrum = np.fft.rfft(data)
+        mask = (freqs >= lowcut) & (freqs <= highcut)
+        return np.fft.irfft(spectrum * mask, n=data.size)
 
     @staticmethod
     def detrend(data):
-        return signal.detrend(data)
+        data = np.asarray(data, dtype=np.float64)
+
+        if signal is not None:
+            return signal.detrend(data)
+
+        if data.size < 2:
+            return data - np.mean(data)
+
+        x = np.arange(data.size, dtype=np.float64)
+        slope, intercept = np.polyfit(x, data, 1)
+        return data - (slope * x + intercept)
 
     @staticmethod
     def compute_hr_from_fft(signal_data, fs, low_hr=0.7, high_hr=3.0):
