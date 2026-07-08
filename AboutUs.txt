@@ -1,0 +1,191 @@
+# Project Overview
+
+## Overview
+
+This project is a real-time heart rate monitoring system based on **Remote Photoplethysmography (rPPG)**, a contactless technique that estimates heart rate by analyzing subtle color changes in facial skin captured by a standard RGB camera. Unlike traditional heart rate sensors, no physical contact with the body is required.
+
+The application starts from **`main.py`**, which reads command-line arguments, updates the system configuration defined in **`config.py`**, and launches the monitoring process implemented in **`heartrate_monitor.py`**.
+
+During execution, the system continuously performs the following steps:
+
+1. Captures video frames from the webcam.
+2. Detects the user's face.
+3. Extracts a skin Region of Interest (ROI).
+4. Computes the average RGB values within the ROI.
+5. Applies the POS (Plane-Orthogonal-to-Skin) algorithm to recover the pulse signal.
+6. Filters the extracted signal and estimates the heart rate in Beats Per Minute (BPM).
+7. Displays the live camera feed, estimated heart rate, signal plots, and heart-rate history.
+
+---
+
+# Core Concepts
+
+The project is based on **Remote Photoplethysmography (rPPG)**, which relies on the fact that blood volume changes during each heartbeat slightly alter the amount of light reflected from human skin. Although these changes are invisible to the human eye, they can be detected by analyzing the intensity variations of the RGB color channels in video frames.
+
+To improve signal quality, the project isolates only the facial skin region while excluding areas that introduce noise.
+
+### Face Detection and ROI Extraction
+
+The **`face_roi.py`** module uses **MediaPipe Face Mesh** to detect facial landmarks with high precision. Using these landmarks, it constructs a convex hull around the face and creates a mask representing the facial skin region.
+
+The mask is then eroded so that only reliable skin areas—primarily the forehead and cheeks—are retained. Regions such as the eyes, mouth, nostrils, and facial boundaries are avoided because they are more susceptible to motion and illumination changes.
+
+---
+
+### Signal Extraction using POS
+
+The **`pos_algorithm.py`** module implements the **Plane-Orthogonal-to-Skin (POS)** algorithm proposed by Wang et al.
+
+First, the average RGB values of the ROI are normalized to reduce the influence of illumination changes. The normalized RGB signals are then projected into a new color space where pulse-related variations are emphasized while common lighting fluctuations are suppressed.
+
+The result is a one-dimensional pulse waveform that contains the physiological information required for heart rate estimation.
+
+---
+
+### Signal Processing
+
+The extracted pulse signal is further processed by **`signal_processing.py`**.
+
+The processing pipeline consists of:
+
+* Removing slow trends from the signal (detrending).
+* Applying a band-pass filter to retain only frequencies corresponding to normal human heart rates.
+* Performing a Fast Fourier Transform (FFT) to convert the signal into the frequency domain.
+* Identifying the dominant frequency within the physiological heart-rate range.
+* Converting that frequency into **Beats Per Minute (BPM)** using:
+
+[
+\text{BPM} = f_{\text{peak}} \times 60
+]
+
+where (f_{\text{peak}}) is the dominant frequency in Hertz.
+
+---
+
+# Technical Details
+
+The system follows a classical **computer vision + digital signal processing** pipeline.
+
+Although effective under controlled conditions, it should be considered a prototype rather than a medical-grade device.
+
+Its performance depends on several factors:
+
+* Stable face detection
+* Adequate lighting
+* Minimal head movement
+* A camera operating near the expected frame rate
+
+To improve robustness, the implementation:
+
+* Measures actual frame timestamps instead of assuming a fixed frame rate.
+* Buffers multiple frames before estimating heart rate.
+* Applies digital filtering to suppress noise.
+* Continuously updates the BPM estimate over time.
+
+However, the current implementation does **not** include advanced techniques such as:
+
+* Motion artifact compensation
+* Signal quality assessment
+* Adaptive ROI tracking
+* Confidence estimation
+* Clinical validation
+
+---
+
+# Software Architecture
+
+The project is modular, with each component responsible for a specific task:
+
+* **`face_roi.py`** – Detects the face and extracts the skin Region of Interest.
+* **`pos_algorithm.py`** – Implements the POS algorithm for rPPG signal extraction.
+* **`signal_processing.py`** – Performs detrending, filtering, FFT analysis, and BPM estimation.
+* **`heartrate_monitor.py`** – Coordinates the complete processing pipeline, manages buffers, updates plots, and displays the user interface.
+* **`config.py`** – Stores configurable parameters such as buffer length, frequency limits, ROI erosion size, and display settings.
+* **`main.py`** – Serves as the application's entry point by loading configuration and starting the monitoring system.
+
+---
+
+# Summary
+
+In summary, this project converts live webcam video into real-time heart rate estimates by analyzing subtle facial color variations caused by blood circulation. It combines **computer vision** for facial skin detection, the **POS algorithm** for pulse extraction, and **digital signal processing** techniques such as detrending, band-pass filtering, and FFT-based frequency analysis to estimate heart rate in **Beats Per Minute (BPM)**. The result is a completely contactless heart rate monitoring system that demonstrates the practical application of remote photoplethysmography using only a standard camera.
+
+
+[in face_roi.py:
+{ 
+    import cv2
+
+OpenCV
+
+Used for:
+
+Image processing
+Convex hull creation
+Morphological operations
+ROI masking
+Color conversion
+}
+
+{
+import mediapipe as mp
+
+MediaPipe
+
+Google's computer vision library.
+
+Provides accurate facial landmark detection.
+}
+{
+import numpy as np
+
+NumPy is used for
+
+Arrays
+Mathematical operations
+Mean calculation
+Coordinate storage
+}
+
+{
+    from config import Config
+
+Imports project settings such as
+
+ROI_EROSION_RATIO
+
+instead of hardcoding values.
+}
+
+{
+    class FaceROIExtractor:
+
+This class contains all methods related to
+
+face detection
+ROI creation
+RGB extraction
+}
+
+{
+    Constructor
+    def __init__(self):
+
+Runs automatically when the object is created.
+}
+
+{
+    self.mp_face_mesh = mp.solutions.face_mesh
+
+Loads MediaPipe's Face Mesh solution.
+}
+
+{
+self.face_mesh = self.mp_face_mesh.FaceMesh(
+
+Creates the face detector.
+}
+
+
+
+
+
+]

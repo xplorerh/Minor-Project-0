@@ -1,0 +1,20 @@
+matplotlib==3.11.0
+mediapipe==0.10.14
+numpy==2.5.1
+opencv-python==5.0.0.93
+scipy==1.18.0
+
+
+
+
+
+
+
+heartbeat-rppg/
+├── config.py              # Global configuration parameters
+├── signal_processing.py   # Butterworth filter, detrend, FFT-based HR
+├── pos_algorithm.py       # POS rPPG algorithm (Wang et al. 2017)
+├── face_roi.py            # MediaPipe Face Mesh → forehead/cheek ROI mask
+├── heartrate_monitor.py   # Main loop: capture, process, display, plot
+├── main.py                # CLI entry point with argparse
+└── requirements.txt
